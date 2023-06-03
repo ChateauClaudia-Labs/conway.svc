@@ -1,0 +1,67 @@
+import abc
+import time
+import inspect
+
+class Logger(abc.ABC):
+
+    def __init__(self, activation_level):
+        '''
+        '''
+        self.activation_level                               = activation_level
+        self.T0                                             = time.perf_counter()
+
+    def log(self, message, log_level, stack_level_increase):
+        '''
+        '''
+        # Do bit-wise multiplication
+        if self.activation_level & log_level > 0:
+            T1                                              = time.perf_counter()
+            time_msg                                        = "{0:.2f} sec".format(T1-self.T0)
+
+            # We want to display the module and line number for the business logic code. Normally we get her because
+            # the business logic code has a line like
+            #
+            #       Application.app().log(---)
+            #
+            # which means we are 4 stack frames away from the business logic code, as these other layers are in between:
+            #
+            #   * The Application class
+            #   * The concrete class derived from Application
+            #   * The concrete Logger class derived from this Logger
+            #   * And this Logger
+            #
+            # On top of these, the caller of the above line might have told us to further increase the stack level, 
+            # if the caller felt that it was layers upstream from it whose line numbers should be displayed.
+            #        
+            STACK_LEVEL                                     = 4 + stack_level_increase
+            def _get_caller_module():
+                frame                                       = inspect.stack()[STACK_LEVEL]
+                lineno                                      = frame.lineno
+                module                                      = inspect.getmodule(frame[0])
+                if not module is None:
+                    module_name                             = module.__name__
+                    source                                  = module_name.split(".")[-1] + ":" + str(lineno)
+                else:
+                    source                                  = "<source location undetermined>"
+                return source
+            source                                          = _get_caller_module()
+            message2                                        = self.unclutter(message)
+
+            prefix                                          ="\n[" + time_msg  + "]\t" + source + "\t"
+            print(prefix + message2)
+
+    def unclutter(self, message):
+        '''
+        Helper method that derived classes can use to shorten long messages. For example, replacing
+        long root path names by an string for an environment variable. 
+        '''
+        return message
+
+    # We use bit vectors to represent log levels
+
+    LEVEL_DEBUG                                 = int('100', 2)
+    LEVEL_DETAILED                              = int('010', 2)
+    LEVEL_INFO                                  = int('001', 2)
+
+
+    
