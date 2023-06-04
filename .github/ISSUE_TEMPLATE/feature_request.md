@@ -7,11 +7,16 @@ assignees: ''
 
 ---
 
-**Description**
-As a ... I  need ... in order to ...
+**Persona and job-to-be-done**
+As a ... 
+I  need ... 
+In order to ...
 
 **Acceptance Criteria**
-Observable outcomes that would validate that the feature is correctly implemented
+Testable outcome that showing how persona can complete job-to-be-done
+
+**Design**
+Functional and technical constructs that achieve the desired behavior
 
 **Additional context**
 Add any other context or screenshots about the feature request here.
