@@ -246,6 +246,7 @@ class DataFrameUtils():
             return None
         
         result_df                           = _pd.concat(non_empty_dfs_list)
+        result_df                           = self.re_index(result_df)
         return result_df
     
     def replace_value(self, input_df, column, old_val_list, new_val):
@@ -836,7 +837,13 @@ class DataFrameUtils():
         ''' 
 
         # Find a column different than `fieldname` to keep in the groupby, while we drop the rest
-        ANY_COLUMN                                  = [col for col in input_df.columns if col !=fieldname][0]
+        other_columns                               = [col for col in input_df.columns if col !=fieldname]
+        if len(other_columns)==0:
+            # We are done slimming, since the only column left is the one we are slimming for.
+            # So we are at the end of the recursion, it's time to stop
+            return []
+        
+        ANY_COLUMN                                  = other_columns[0]
         duplicates_df                               = input_df.groupby([fieldname]).count()[ANY_COLUMN].to_frame()
         duplicates_df.columns                       = ["# items"]
         duplicates_df                               = duplicates_df[duplicates_df["# items"] > 1]

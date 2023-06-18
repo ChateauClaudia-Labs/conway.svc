@@ -15,8 +15,8 @@ class Application(abc.ABC):
 
         Application._singleton_app              = self
 
-    def log(self, message, log_level, stack_level_increase=0):
-        self.logger.log(message, log_level, stack_level_increase)
+    def log(self, message, log_level, stack_level_increase=0, show_caller=True):
+        self.logger.log(message, log_level, stack_level_increase, show_caller=show_caller)
 
     _singleton_app                              = None
 

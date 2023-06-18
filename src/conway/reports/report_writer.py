@@ -68,8 +68,10 @@ class ReportWriter():
                 try: # This try is just to help put a breakpoint in the debugger if this line ever fails. We don't really handle the exception
                     worksheet.write(xl_row, xl_col, val, fmt)
                 except Exception as ex:
-                    Application.app().log("Unable to write column header '" + str(header) + "'; for reference the columns are '"
-                                        + "', '".join([str(col) for col in columns]))
+                    Application.app().log("Unable to write value '" + str(val) + "'"
+                                          + " at row=" + str(xl_row) + ", column=" + str(col) 
+                                          + "\nFor reference the columns are '" + "', '".join([str(col) for col in columns]),
+                                      log_level = Logger.LEVEL_INFO)
                     raise ex
 
         # Freeze panes & set zoom to 85%
