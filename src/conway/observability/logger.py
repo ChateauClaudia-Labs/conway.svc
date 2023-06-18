@@ -2,16 +2,21 @@ import abc
 import time
 import inspect
 
+from conway.application.application                             import Application
+
 class Logger(abc.ABC):
 
     def __init__(self, activation_level):
         '''
         '''
         self.activation_level                               = activation_level
+
         self.T0                                             = time.perf_counter()
 
-    def log(self, message, log_level, stack_level_increase):
+    def log(self, message, log_level, stack_level_increase, show_caller=True):
         '''
+        :param bool show_caller: if True, causes all logs to include the filename and line number from where logging
+            occurs.
         '''
         # Do bit-wise multiplication
         if self.activation_level & log_level > 0:
@@ -44,7 +49,11 @@ class Logger(abc.ABC):
                 else:
                     source                                  = "<source location undetermined>"
                 return source
-            source                                          = _get_caller_module()
+            
+            source                                          = ""
+            if show_caller:
+                source                                      = _get_caller_module()
+
             message2                                        = self.unclutter(message)
 
             prefix                                          ="\n[" + time_msg  + "]\t" + source + "\t"
@@ -64,4 +73,10 @@ class Logger(abc.ABC):
     LEVEL_INFO                                  = int('001', 2)
 
 
-    
+    def log_info(msg):
+        '''
+        Logs the ``msg`` at the INFO log level.
+
+        :param str msg: Information to be logged
+        '''
+        Application.app().log(msg, Logger.LEVEL_INFO, show_caller=False)
