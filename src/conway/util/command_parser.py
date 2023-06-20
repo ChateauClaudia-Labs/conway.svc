@@ -113,7 +113,7 @@ class CommandParser():
         class _SubstringState(_AbstractState):
             def __init__(self, machine, initial_token):
                 super().__init__(machine)
-                self.substring                  = initial_token
+                self.substring                  = initial_token[1:] # Don't include the quote at index 0 in the substring
                 self.delimeter                  = initial_token[0]
 
             def advance(self):
@@ -127,7 +127,7 @@ class CommandParser():
                 
             def close_substring(self):
                 M                               = self.machine
-                self.substring                  += " " + self.next_token
+                self.substring                  += " " + self.next_token[:-1] # Don't include the quote at the end in the substring
                 M.args.append(self.substring)
                 M.state                         = M._UsualState(M)
             
