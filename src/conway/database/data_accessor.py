@@ -116,6 +116,7 @@ class DataAccessor():
         '''
         '''
         self.ACTION                         = "copy"
+        Path(src_url).mkdir(parents=True, exist_ok=True)
         _shutil.copytree(src                = src_url, 
                          dst                = self.url,
                          dirs_exist_ok      = True)

@@ -34,6 +34,22 @@ class DataBaseProjector(abc.ABC):
         :returns: The object that knows how to filter datasets in an input database to get projected datasets
         '''
 
+    def must_save_even_if_empty(self, relative_url) -> bool:
+        '''
+        Consultative method which concrete classes may overwrite.
+
+        By default, the projector will not save project datasets if they are empty. However, concrete
+        classes may decide that some datasets must always exist, even if empty. If so, concrete classes
+        can use this method as an "escape hatch" in the projector logic.
+
+        :param str relative_url: The path under an Application's data hub for a dataset that is being
+            considered to be saved by the projeector.
+        :return: True if the projected dataset identified by the ``relative_url`` parameter must be saved
+            by the ``self.project`` method, even if the dataset ise empty. False otherwise. False is the
+            default
+        :rtype: bool
+        '''
+        return False
 
     def project(self, input_db: 	DataBaseManifest, output_db: DataBaseManifest) -> _pd.DataFrame:
         '''
@@ -184,6 +200,11 @@ class DataBaseProjector(abc.ABC):
             full_url                                            = projected_info.hub_handle.hub_root() + "/" + relative_url
 
             subpath                                             = projected_info.sheet
+
+            # Only persiste non-empty datasets (projecting might create some empty ones, so this actually happens)
+            if len(projected_df) == 0 and not self.must_save_even_if_empty(relative_url):
+                continue
+
             DataAccessor(url=full_url, subpath=subpath).persist(data_df=projected_df)
             nb_saved                                            += 1
 
