@@ -1,9 +1,10 @@
 import pandas                                                           as _pd
 import datetime                                                         as _datetime
+import re                                                               as _re
 import math
 import numbers
 
-from conway.util.timestamp                                 import Timestamp                
+from conway.util.timestamp                                              import Timestamp                
 
 class DataFrameUtils():
 
@@ -201,19 +202,40 @@ class DataFrameUtils():
 
 
 
-    def slice(self, df, column, matching_tag_list):
+    def slice(self, df, column, matching_tag_list, words_regex=None):
         '''
         Returns a DataFrame obtained by filtering rows of `df` using this criterion:
 
-        * Include a row if the value X at the row's column `column` contains at least one of the tags in the list `matching_tag_list`
+        * Include a row if the value X at the row's column `column` contains at least one of the tags in the list 
+          ``matching_tag_list`` or, if ``words_regex`` is set, parsing X into words using the ``words_regex`` yields
+          at least ond oe the tags in ``matching_tag_list``
 
         @param df A DataFrame
 
         @param matching_tag_list A list of possible tags to filter column `column` in DataFrame `df`
+
+        :param str words_regex: Optional regular expression, which is None by default. If it is set, then we 
+            for each row we parse ``row[column]`` into words, and we then we filter by whether at least one of the tags
+            in ``matching_tag_list`` exactly matches one of the words.
         '''
+        if not words_regex is None:
+            REGEX                                                   = _re.compile(words_regex)
+        else:
+            REGEX                                                   = None
+
         def _is_a_match(row):
             val                                                     = row[column]
-            matches                                                 = [elt for elt in matching_tag_list if type(val)==str and str(elt) in val]
+
+            if type(val) != str:
+                allowed_tags                                        = None
+            elif not REGEX is None:
+                allowed_tags                                        = [x.strip() for x in REGEX.findall(val)]
+            else:
+                allowed_tags                                        = val
+            
+
+
+            matches                                                 = [tag for tag in matching_tag_list if not allowed_tags is None and str(tag) in allowed_tags]
             if len(matches) > 0:
                 return True
             else:
