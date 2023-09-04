@@ -5,21 +5,21 @@ from conway.util.yaml_utils                                 import YAML_Utils
 
 class Application(abc.ABC):
 
+    '''
+    This class is supposed to be a singleton, constructed by static methods in concrete derived
+    classes. Should not be constructed directly.
+    It aims to group some global pluggable components that should be accessible from anywhere in code.
+
+    :param str app_name: Name for the application. It determines the name of the configuration file. For example,
+        if the application is called "Foo", the properties file would be "Foo_config.yaml"
+
+    :param str config_path: location in the filesystem of a Yaml file containing the properties
+        to be used in this installation of a Conway application.
+
+    :param Logger logger: object providing logging services that business logic can use to log messages.
+        
+    '''
     def __init__(self, app_name, config_path, logger):
-        '''
-        This class is not supposed to be a singleton, constructed by static methods in concrete derived
-        classes. Should not be constructed directly.
-        It aims to group some global pluggable components that should be accessible from anywhere in code.
-
-        :param str app_name: Name for the application. It determines the name of the configuration file. For example,
-            if the application is called "Foo", the properties file would be "Foo_config.yaml"
-
-        :param str config_path: location in the filesystem of a Yaml file containing the properties
-            to be used in this installation of a Conway application.
-
-        :param Logger logger: object providing logging services that business logic can use to log messages.
-            
-        '''
         if not Application._singleton_app is None:
             raise RuntimeError("An attempt was made to initialize an already initialized Application, which is not allowed")
         

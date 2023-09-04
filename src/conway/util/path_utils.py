@@ -1,4 +1,6 @@
 
+from pathlib                                                import Path
+import shutil           
 
 class PathUtils():
 
@@ -18,8 +20,20 @@ class PathUtils():
             * In the above replacements, an additional "\" is needed as an escape character
 
         Then returns the modified path
+
+        :param str path: path that is to be clearned up.
         '''
         modified_path                   = path.replace("\v", "/v")          \
                                                 .replace("\\", "/")         \
                                                 .replace("//", "/")
         return modified_path
+    
+    def remove(self, path):
+        '''
+        Removes all contents under the absolute path ``path``. If the path does not exist, it just returns without triggering
+        error messages.
+
+        :param str path:
+        '''
+        if Path(path).exists():
+            shutil.rmtree(path)

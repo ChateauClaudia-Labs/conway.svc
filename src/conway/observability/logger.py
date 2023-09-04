@@ -6,9 +6,12 @@ from conway.application.application                             import Applicati
 
 class Logger(abc.ABC):
 
+    '''
+    Parent class to support logging for Conway applications. Normally each concrete Conway application class
+    would use a logger derived from this class, specific to that Conway application.
+    '''
     def __init__(self, activation_level):
-        '''
-        '''
+
         self.activation_level                               = activation_level
 
         self.T0                                             = time.perf_counter()
