@@ -639,15 +639,33 @@ class DataFrameUtils():
         '''
         Creates and returns a DataFrame obtained from `input_df` by dropping columns that Pandas creates
         at various times, such as when loading a DataFrame from Excel, which may lead to the creation
-        of the "Unnamed :0" column
+        of the "Unnamed :0" column.
+        
+        For CSV files, we also have to clean up the spurious symbol "ï»¿", which is appended to the first column
+        name as a prefix. This means taking two corrective actions:
+        
+        * Remove a column called "ï»¿"
+        * Rename any column that starts with ""ï»¿" but has additional text, by removing the "ï»¿" prefix
         '''
-        SPURIOUS_COLUMNS                    = ["Unnamed: 0", "Unnamed: 0.1"] #, 'Unnamed: 0.1', 'Unnamed: 0']
+        SPURIOUS_COLUMNS                    = ["Unnamed: 0", "Unnamed: 0.1", "ï»¿"] #, 'Unnamed: 0.1', 'Unnamed: 0']
         columns_to_drop                     = []
         for col in SPURIOUS_COLUMNS:
             if col in input_df.columns:
                 columns_to_drop.append(col)
 
         result_df                           = input_df.drop(columns=columns_to_drop)
+
+        SPURIOUS_PREFIXES                   = ["ï»¿"]
+        # Now check if any columns start with the spurious prefixes
+        cleaned_columns                     = []
+        for col in result_df.columns:
+            if type(col) == str:
+                for prefix in SPURIOUS_PREFIXES:
+                    col                     = col.strip(prefix)
+            cleaned_columns.append(col)
+
+        result_df.columns                   = cleaned_columns
+
         return result_df
     
     def load_excel(self, path, sheet_name="Sheet1"):
@@ -655,6 +673,14 @@ class DataFrameUtils():
         Creates and returns a DataFrame by loading an Excel spreadsheet, removing any spurious columns if needed.
         '''
         df0                                 = _pd.read_excel(path, sheet_name=sheet_name)
+        df1                                 = self._drop_spurious_columns(df0)
+        return df1
+    
+    def load_csv(self, path):
+        '''
+        Creates and returns a DataFrame by loading an CSV file, removing any spurious columns if needed.
+        '''
+        df0                                 = _pd.read_csv(path, encoding='cp1252')
         df1                                 = self._drop_spurious_columns(df0)
         return df1
 
@@ -709,6 +735,10 @@ class DataFrameUtils():
         slim_columns                                = list(strict_slim_df.columns)
         # Avoid having a column duplicated by only adding interesting_fields not already in the slim columns
         columns_to_add                              = [elt for elt in interesting_fields if not elt in slim_columns]
+
+        # Avoid errors if the "interesting fields" include columns that don't exist in ``input_df``, by not trying to add them
+        columns_to_add                              = [elt for elt in columns_to_add if elt in input_df.columns]
+
         result_df                                   = input_df[slim_columns + columns_to_add].drop_duplicates()
         result_df                                   = self.fill_nan(result_df, interesting_fields, fill_value="")
         return result_df
@@ -737,7 +767,8 @@ class DataFrameUtils():
         @param input_df A DataFrame, from which this method creates and returns a "slimmed down" version with probably
                         fewer rows.
         @param field_to_slim_to A string, which must be a column in `input_df`
-        @param interesting_fields A list of strings, each of which must be a column in `input_df` with string values
+        @param interesting_fields A list of strings, each of which must be a column in `input_df` with string values.
+            If it is not a column in ``input_df``, it is ignored.
         @param collapsing_methods_dict A dict, which is empty by default. Keys are strings taken from `interesting_fields`,
                 and values are functions that are used to collapse, with a signature like
 
@@ -757,7 +788,10 @@ class DataFrameUtils():
 
         uncollapsed_df                              = base_df.copy()
         spec                                        = {}
-        for col in interesting_fields:
+
+        # Only loop over interesting fields that are "real columns" to avoid key errors
+        for col in [elt for elt in interesting_fields if elt in input_df.columns]: 
+            
             NB_COL                                  = "# " + col
             spec[NB_COL]                            = self.count_vals
             if col in collapsing_methods_dict.keys():
@@ -769,7 +803,8 @@ class DataFrameUtils():
             uncollapsed_df[NB_COL]                  = uncollapsed_df[col]
             
 
-        if len(interesting_fields) > 0:
+        #if len(interesting_fields) > 0:
+        if len(spec) > 0:
             collapsed_df                            = uncollapsed_df.groupby(columns_for_grouping).aggregate(spec).reset_index()
         else:
             collapsed_df                            = uncollapsed_df
@@ -857,16 +892,23 @@ class DataFrameUtils():
                 columns were removed from `input_df` and `DataFrame::drop_duplicates()` called, then there would be exactly 1 row
                 per value of `input_df.
         ''' 
-
+        # GOTCHA
+        #   We might get an infinite loop exception if there are duplicated rows in input_df, since the logic below to
+        #   detect multiple occurrences of ``fieldname`` does it by counting rows with the same value, and assumes
+        #   that at least one column in such rows must differ.
+        #
+        #   So to prevent an infinite loop, de-duplicate input_df before using it
+        dedup_input_df                              = input_df.drop_duplicates()
+        
         # Find a column different than `fieldname` to keep in the groupby, while we drop the rest
-        other_columns                               = [col for col in input_df.columns if col !=fieldname]
+        other_columns                               = [col for col in dedup_input_df.columns if col !=fieldname]
         if len(other_columns)==0:
             # We are done slimming, since the only column left is the one we are slimming for.
             # So we are at the end of the recursion, it's time to stop
             return []
         
         ANY_COLUMN                                  = other_columns[0]
-        duplicates_df                               = input_df.groupby([fieldname]).count()[ANY_COLUMN].to_frame()
+        duplicates_df                               = dedup_input_df.groupby([fieldname]).count()[ANY_COLUMN].to_frame()
         duplicates_df.columns                       = ["# items"]
         duplicates_df                               = duplicates_df[duplicates_df["# items"] > 1]
         duplicates_df                               = duplicates_df.sort_values(by=["# items"], ascending=False)
@@ -877,7 +919,7 @@ class DataFrameUtils():
         # Else we filter on the first value, since that has the most duplicates
         duplicated_val                              = duplicates_df.index[0]
         
-        duplicated_val_df                           = input_df[input_df[fieldname]==duplicated_val]
+        duplicated_val_df                           = dedup_input_df[dedup_input_df[fieldname]==duplicated_val]
         
         # We know problem_vis_df has at least 2 rows and that they differ in at least some columns, since
         # otherwise we would have returned an empty list in the logic above.
@@ -893,15 +935,15 @@ class DataFrameUtils():
             if val_0 != val_1:
                 most_differences_cols.append(col)
         
-        columns_to_keep                             = [col for col in input_df.columns if not col in most_differences_cols]
-        if len(columns_to_keep) == len(input_df.columns):
+        columns_to_keep                             = [col for col in dedup_input_df.columns if not col in most_differences_cols]
+        if len(columns_to_keep) == len(dedup_input_df.columns):
             # This should never happen - our list of columns should be getting smaller, so if it does not,
             # the recursion will be infinite and there is a bug in the earlier code that was supposed to return
             # in such situations so that we never get here
             raise Exception("Infinite recursion error in 'find_columns_causing_most_duplicates': column size not "
                             + "reduced. Was supposed to have a non-empty list of colums driving the duplicates: ["
                             + ", ".join(most_differences_cols) + "].")
-        first_deduplicated_df                       = input_df[columns_to_keep].drop_duplicates()
+        first_deduplicated_df                       = dedup_input_df[columns_to_keep].drop_duplicates()
         
         other_differences_cols                      = self._find_columns_causing_most_duplicates(first_deduplicated_df, fieldname)
         
