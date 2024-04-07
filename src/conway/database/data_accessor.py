@@ -9,10 +9,9 @@ class DataAccessor():
 
     def __init__(self, url, subpath=None):
         '''
-        Context manager to provide safe functionality to load datasets for the `vulnerability_management`
-        module.
+        Context manager to provide safe functionality to load datasets for a Conway application.
 
-        It encapsulate the current Excel or CSV-based implementation and provides encpasulation for potential future
+        It encapsulate the current Excel or CSV-based implementation and provides encapsulation for potential future
         performance improvements.
         '''
         self.url                            = url
