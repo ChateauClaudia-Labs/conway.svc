@@ -7,12 +7,13 @@ class Profiler():
     '''
     Context manager that provides the functionality of measuring and printing the time it takes for a block of code
     to execute
+
+    :param str behavior_being_profiled: describes the functionality that is being profiled. Used in the 
+            message displayed at the end.
+
     '''
     def __init__(self, behavior_being_profiled):
-        '''
-        @param action_msg A string, that describes the functionality that is being profiled. Used in the 
-                message displayed at the end.
-        '''
+
         self.behavior_being_profiled                            = behavior_being_profiled                       
 
 

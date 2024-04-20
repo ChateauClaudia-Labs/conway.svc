@@ -252,7 +252,7 @@ class DataFrameUtils():
     
     def concat(self, df_list: list) -> _pd.DataFrame:
         '''
-        Method for savely concatenating DataFrames, avoiding common pitfalls when the DataFrame.concat method is
+        Method for safely concatenating DataFrames, avoiding common pitfalls when the DataFrame.concat method is
         called directly
 
         :param list df_list:
@@ -263,7 +263,7 @@ class DataFrameUtils():
         if df_list is None:
             return None
         
-        non_empty_dfs_list                  = [df for df in df_list if len(df.index)>0]
+        non_empty_dfs_list                  = [df for df in df_list if (not df is None) and len(df.index)>0]
         if len(non_empty_dfs_list) == 0:
             return None
         
@@ -474,7 +474,7 @@ class DataFrameUtils():
 
         @param `input_df` A DataFrame all of whose columns have numerical values
         '''
-        result_df                           = input_df.aggregate(sum).to_frame().transpose()
+        result_df                           = input_df.aggregate("sum").to_frame().transpose()
         result_df.index                     = ["Total"]
         return result_df
 
