@@ -222,6 +222,8 @@ class DataBaseProjector(abc.ABC):
                                                                         "Input nb columns":         stats_input_nb_columns,
                                                                         "Output nb rows":           stats_output_nb_rows,
                                                                         "Output nb columns":        stats_output_nb_columns})
+        
+        #stats_df                                                = stats_df.sort_values(by="Relative url")
         return stats_df
 
 
