@@ -11,7 +11,7 @@ class DataAccessor():
     Context manager to provide safe functionality to load datasets for a Conway application.
 
 
-    It encapsulate the current Excel-based implementation and provides encpasultion for potential future
+    It encapsulates the current Excel or CSV-based implementation and provides encpasultion for potential future
     performance improvements.
     '''
     def __init__(self, url, subpath=None):
