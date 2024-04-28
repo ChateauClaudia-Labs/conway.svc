@@ -4,13 +4,13 @@ class DataHub(abc.ABC):
 
     '''
     This is a datastructure class, used to hold the specification for a portion of the database associated
-    to an application built with the conway module.
+    to a Conway-based application.
 
-    The conway is geared towards the development of pipeline applications that provide services
+    Conway is geared towards the development of pipeline applications that provide services
     to transform certain Excel spreadsheets into other Excel spreadshets, typically across multiple 
     "data science" steps involving data analysis and enrichment.
 
-    The "database" for such an application is a collection of folder structure in the (possibly remote)
+    The "database" for such an application is a collection of folder structures in the (possibly remote)
     file system in which those Excel spreadsheets reside.
 
     The Excel spreadsheets are organized into taxonomies, and each such taxonomy is what we call a "Data Hub".
