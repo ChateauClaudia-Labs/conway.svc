@@ -7,13 +7,15 @@ from conway.util.dataframe_utils                       import DataFrameUtils
 
 class DataAccessor():
 
-    def __init__(self, url, subpath=None):
-        '''
-        Context manager to provide safe functionality to load datasets for a Conway application.
+    '''
+    Context manager to provide safe functionality to load datasets for a Conway application.
 
-        It encapsulate the current Excel or CSV-based implementation and provides encapsulation for potential future
-        performance improvements.
-        '''
+
+    It encapsulates the current Excel or CSV-based implementation and provides encpasultion for potential future
+    performance improvements.
+    '''
+    def __init__(self, url, subpath=None):
+
         self.url                            = url
         self.subpath                        = subpath
 
